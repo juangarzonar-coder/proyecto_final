@@ -1,0 +1,48 @@
+// C4 · Nivel 2 · Diagrama de contenedores — estado objetivo tras la refactorización
+// En C4 un "contenedor" es algo que se ejecuta o almacena datos por separado. Este sistema tiene
+// tres: la aplicación de escritorio, la base de datos y el archivo de registro. Las capas internas
+// de la aplicación se muestran en el nivel 3 (componentes).
+// Editable. Para exportar (requiere Graphviz):  dot -Tpng c4-2-contenedores.dot -o ../exportados/c4-2-contenedores.png   (o -Tsvg)
+digraph C4_Contenedores {
+  graph [rankdir=TB, fontname="Helvetica", bgcolor="white", pad=0.4, nodesep=0.8, ranksep=0.9,
+         label=<<b>[Contenedores] Sistema de Gestión EmpresaLimpieza</b><br/><font point-size="10">C4 nivel 2 · Piezas ejecutables y de almacenamiento del sistema (estado objetivo)</font>>,
+         labelloc=t, fontsize=16];
+  node  [fontname="Helvetica", fontsize=10, shape=box, style="rounded,filled", margin="0.25,0.14", penwidth=0];
+  edge  [fontname="Helvetica", fontsize=9, color="#707070", fontcolor="#505050", arrowsize=0.8];
+
+  admin [fillcolor="#08427B", fontcolor="white", label=<<b>Administrador / Empleado</b><br/><font point-size="9">[Persona]</font><br/><br/>Gestiona el inventario<br/>desde su computador.>];
+
+  subgraph cluster_sistema {
+    label=<<b>Sistema de Gestión EmpresaLimpieza</b>  <font point-size="9">[Sistema de software]</font>>;
+    style="rounded,dashed"; color="#1168BD"; fontcolor="#1168BD"; fontsize=12; margin=22;
+
+    app [fillcolor="#438DD5", fontcolor="white", label=<
+      <table border="0" cellborder="0" cellspacing="0" cellpadding="1">
+      <tr><td><b>Aplicación de escritorio</b></td></tr>
+      <tr><td><font point-size="9">[Contenedor · Python 3 + CustomTkinter + ttk.Treeview]</font></td></tr>
+      <tr><td> </td></tr>
+      <tr><td>Interfaz gráfica para productos, clientes, pedidos,</td></tr>
+      <tr><td>materias primas, proveedores, categorías y finanzas.</td></tr>
+      <tr><td> </td></tr>
+      <tr><td align="left"><font point-size="9"><b>Organización interna (ver nivel 3):</b></font></td></tr>
+      <tr><td align="left"><font point-size="9">• src/inventario/ → nueva arquitectura por capas (Productos)</font></td></tr>
+      <tr><td align="left"><font point-size="9">   presentación → servicios → dominio ← acceso a datos</font></td></tr>
+      <tr><td align="left"><font point-size="9">• src/interfaces/ + src/crud/ → módulos heredados (se migran por etapas)</font></td></tr>
+      </table>>];
+
+    bd [shape=cylinder, fillcolor="#438DD5", fontcolor="white", label=<<b>Base de datos EmpresaLimpiezaDB</b><br/><font point-size="9">[Contenedor · Microsoft SQL Server]</font><br/><br/>Tablas Producto, Categoria, Cliente,<br/>Pedido, DetallePedido, MateriaPrima,<br/>Proveedor, ProductoMateriaPrima.<br/>Llaves foráneas protegen la integridad.>];
+
+    logs [shape=note, fillcolor="#438DD5", fontcolor="white", label=<<b>Registro de eventos</b><br/><font point-size="9">[Contenedor · archivo logs/app.log]</font><br/><br/>Errores y operaciones con fecha,<br/>nivel y módulo. Rotativo (3 × 1 MB).<br/><i>Nuevo en esta re-arquitectura.</i>>];
+  }
+
+  admin -> app [label="  Usa\n  [teclado y ratón]"];
+  app -> bd [label="  Lee y escribe datos\n  [SQL parametrizado · ODBC Driver 17 · TCP 1433]"];
+  app -> logs [label="  Escribe errores y eventos\n  [logging · RotatingFileHandler]"];
+
+  leyenda [shape=plaintext, style="", fontsize=9, label=<<table border="0" cellborder="0" cellspacing="6" cellpadding="5">
+    <tr><td colspan="3" align="left"><b>Leyenda</b></td></tr>
+    <tr><td bgcolor="#08427B"><font color="white">Persona</font></td>
+        <td bgcolor="#438DD5"><font color="white">Contenedor</font></td>
+        <td><font color="#1168BD">- - -  límite del sistema</font></td></tr></table>>];
+  bd -> leyenda [style=invis];
+}

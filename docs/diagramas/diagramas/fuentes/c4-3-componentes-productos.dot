@@ -1,0 +1,81 @@
+// C4 · Nivel 3 · Diagrama de componentes — Módulo MVP: Gestión de Productos (estado objetivo)
+// Cada caja indica el archivo de src/ que la implementa.
+// Editable. Para exportar (requiere Graphviz):  dot -Tpng c4-3-componentes-productos.dot -o ../exportados/c4-3-componentes-productos.png   (o -Tsvg)
+digraph C4_Componentes_Productos {
+  graph [rankdir=TB, fontname="Helvetica", bgcolor="white", pad=0.4, nodesep=0.45, ranksep=0.55, compound=true, newrank=true,
+         label=<<b>[Componentes] Módulo MVP · Gestión de Productos</b><br/><font point-size="10">C4 nivel 3 · Componentes de la nueva arquitectura y el archivo que implementa cada uno</font>>,
+         labelloc=t, fontsize=16];
+  node  [fontname="Helvetica", fontsize=9.5, shape=box, style="rounded,filled", fillcolor="#85BBF0", fontcolor="#0B2E4F", margin="0.18,0.1", penwidth=0];
+  edge  [fontname="Helvetica", fontsize=8.5, color="#707070", fontcolor="#505050", arrowsize=0.7];
+
+  admin [fillcolor="#08427B", fontcolor="white", fontsize=10, label=<<b>Administrador / Empleado</b><br/><font point-size="8">[Persona]</font>>];
+  menu  [fillcolor="#C9C9C9", fontcolor="#333333", label=<<b>Menú principal</b><br/><font point-size="8">[Heredado · interfaces/menu_principal.py]</font><br/>Carga la vista con importlib.>];
+
+  subgraph cluster_pres {
+    label=<<b>Capa de presentación</b>>; style="rounded,dashed"; color="#438DD5"; fontcolor="#438DD5"; fontsize=11; margin=14;
+    vista [label=<<b>VistaProductos</b><br/><font point-size="8">[Componente · vistas/productos_vista.py]</font><br/>Construye la pantalla y muestra<br/>resultados. Sin lógica de negocio.>];
+    form  [label=<<b>FormularioCRUD</b><br/><font point-size="8">[Componente reutilizable · componentes/formulario.py]</font><br/>Campos declarativos: leer, llenar,<br/>limpiar y marcar errores.>];
+    tabla [label=<<b>TablaCRUD</b><br/><font point-size="8">[Componente reutilizable · componentes/tabla.py]</font><br/>Treeview con selección por id.>];
+    ctrl  [label=<<b>ProductosControlador</b><br/><font point-size="8">[Componente · controladores/productos_controlador.py]</font><br/>Estado de edición; convierte el formulario<br/>en datos; devuelve Resultado.>];
+    errs  [label=<<b>ejecutar_accion</b><br/><font point-size="8">[Componente · controladores/manejo_errores.py]</font><br/>Único punto que traduce errores<br/>a mensajes y los registra.>];
+    estilos [fillcolor="#C9C9C9", fontcolor="#333333", label=<<b>estilos.py</b><br/><font point-size="8">[Heredado · interfaces/estilos.py]</font><br/>Colores, fuentes y widgets base.>];
+  }
+
+  subgraph cluster_serv {
+    label=<<b>Capa de servicios</b>>; style="rounded,dashed"; color="#438DD5"; fontcolor="#438DD5"; fontsize=11; margin=14;
+    serv [label=<<b>ProductoServicio</b><br/><font point-size="8">[Componente · servicios/producto_servicio.py]</font><br/>crear · actualizar · eliminar · listar.<br/>Regla: no borrar productos en pedidos.>];
+  }
+
+  subgraph cluster_dom {
+    label=<<b>Capa de dominio</b>>; style="rounded,dashed"; color="#438DD5"; fontcolor="#438DD5"; fontsize=11; margin=14;
+    prod [label=<<b>Producto / Categoria</b><br/><font point-size="8">[Entidades · dominio/producto.py, categoria.py]</font><br/>Inmutables; nunca existen inválidas.>];
+    val  [label=<<b>validaciones</b><br/><font point-size="8">[Funciones puras · dominio/validaciones.py]</font><br/>texto_requerido, decimal_positivo,<br/>entero_no_negativo, ColectorErrores.>];
+  }
+
+  subgraph cluster_datos {
+    label=<<b>Capa de acceso a datos</b>>; style="rounded,dashed"; color="#438DD5"; fontcolor="#438DD5"; fontsize=11; margin=14;
+    contrato [label=<<b>ProductoRepositorio · CategoriaRepositorio</b><br/><font point-size="8">[Contratos · repositorios/interfaces.py]</font><br/>typing.Protocol>];
+    reposql [label=<<b>ProductoRepositorioSQL</b><br/><font point-size="8">[Componente · repositorios/sqlserver/producto_repositorio.py]</font><br/>Consultas parametrizadas; FK → ProductoEnUsoError.>];
+    repomem [label=<<b>Repositorios en memoria</b><br/><font point-size="8">[Componente · repositorios/memoria.py]</font><br/>Pruebas automáticas y modo demo.>];
+    gestor  [label=<<b>GestorConexion</b><br/><font point-size="8">[Componente · repositorios/sqlserver/conexion.py]</font><br/>Abre/cierra conexión, commit/rollback,<br/>traduce SQLSTATE a errores propios.>];
+  }
+
+  subgraph cluster_comun {
+    label=<<b>Componentes comunes</b>>; style="rounded,dashed"; color="#6FA8DC"; fontcolor="#6FA8DC"; fontsize=11; margin=14;
+    errores [label=<<b>Errores propios</b><br/><font point-size="8">[comun/errores.py]</font><br/>ErrorValidacion, ProductoEnUsoError,<br/>ErrorConexion…>];
+    registro [label=<<b>Registro</b><br/><font point-size="8">[comun/registro.py]</font><br/>logging → logs/app.log>];
+    config [label=<<b>Configuración</b><br/><font point-size="8">[config.py · arranque.py]</font><br/>Variables de entorno y<br/>raíz de composición.>];
+  }
+
+  bd [shape=cylinder, fillcolor="#999999", fontcolor="white", fontsize=10, label=<<b>SQL Server</b><br/><font point-size="8">[Base de datos externa]</font>>];
+
+  admin -> menu [label=" Abre Productos"];
+  menu -> vista [label=" abrir_productos()"];
+  vista -> form; vista -> tabla;
+  form -> estilos [style=dotted, arrowhead=open]; tabla -> estilos [style=dotted, arrowhead=open];
+  vista -> ctrl [label=" guardar(valores)\n eliminar(id)"];
+  ctrl -> errs [label=" envuelve cada acción"];
+  ctrl -> serv [label=" usa"];
+  serv -> prod [label=" Producto.desde_datos()"];
+  prod -> val;
+  serv -> contrato [label=" depende solo\n del contrato"];
+  reposql -> contrato [style=dashed, arrowhead=empty, label=" implementa"];
+  repomem -> contrato [style=dashed, arrowhead=empty, label=" implementa"];
+  reposql -> gestor [label=" cursor()"];
+  gestor -> bd [label=" pyodbc"];
+  errs -> registro [style=dotted, arrowhead=open, label=" registra"];
+  gestor -> errores [style=dotted, arrowhead=open, label=" lanza"];
+  config -> serv [style=dotted, arrowhead=open, label=" arma la cadena e\n inyecta repositorios", constraint=false];
+
+  // Orden vertical de las capas (de arriba hacia abajo)
+  { rank=same; admin; }
+  { rank=same; vista; config; }
+  { rank=same; form; tabla; ctrl; }
+  { rank=same; estilos; errs; registro; }
+  { rank=same; serv; errores; }
+  { rank=same; prod; contrato; }
+  { rank=same; val; reposql; repomem; }
+  { rank=same; gestor; }
+  { rank=same; bd; }
+  errs -> serv [style=invis];
+}

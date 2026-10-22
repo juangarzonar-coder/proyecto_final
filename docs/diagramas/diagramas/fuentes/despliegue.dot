@@ -1,0 +1,31 @@
+// Diagrama de despliegue — cómo se instala y ejecuta el sistema
+// Editable. Para exportar (requiere Graphviz):  dot -Tpng despliegue.dot -o ../exportados/despliegue.png   (o -Tsvg)
+digraph Despliegue {
+  graph [rankdir=LR, fontname="Helvetica", bgcolor="white", pad=0.4, nodesep=0.6, ranksep=1.0,
+         label=<<b>[Despliegue] Sistema de Gestión EmpresaLimpieza</b><br/><font point-size="10">Aplicación de escritorio cliente-servidor en la red local de la empresa</font>>,
+         labelloc=t, fontsize=16];
+  node  [fontname="Helvetica", fontsize=10, shape=box, style="rounded,filled", fillcolor="#438DD5", fontcolor="white", margin="0.2,0.12", penwidth=0];
+  edge  [fontname="Helvetica", fontsize=9, color="#707070", fontcolor="#505050"];
+
+  subgraph cluster_pc {
+    label=<<b>PC del empleado</b><br/><font point-size="9">[Nodo · Windows 10/11]</font>>; style="rounded"; color="#555555"; fontsize=11; margin=16;
+    subgraph cluster_py {
+      label=<<font point-size="10"><b>Python 3.10+</b> · entorno virtual</font>>; style="rounded,dashed"; color="#888888"; margin=12;
+      app [label=<<b>Aplicación EmpresaLimpieza</b><br/><font point-size="9">[src/main.py]</font><br/><br/>Presentación · Servicios · Dominio<br/>Acceso a datos · Comunes>];
+    }
+    odbc [fillcolor="#6FA8DC", label=<<b>ODBC Driver 17</b><br/><font point-size="9">for SQL Server</font>>];
+    log  [shape=note, fillcolor="#999999", label=<<b>logs/app.log</b><br/><font point-size="9">rotativo · 3 respaldos de 1 MB</font>>];
+  }
+
+  subgraph cluster_srv {
+    label=<<b>Servidor de base de datos</b><br/><font point-size="9">[Nodo · mismo PC (localhost) o servidor en la LAN]</font>>; style="rounded"; color="#555555"; fontsize=11; margin=16;
+    sql [shape=cylinder, fillcolor="#999999", label=<<b>SQL Server</b><br/><font point-size="9">Express / Developer</font><br/><br/>EmpresaLimpiezaDB>];
+  }
+
+  app -> odbc [label="  pyodbc"];
+  odbc -> sql [label="  TDS · TCP 1433\n  Windows Auth o usuario SQL\n  (INVENTARIO_DB_*)"];
+  app -> log [label="  logging"];
+
+  demo [shape=note, fillcolor="#FFF4C2", fontcolor="#5A4A00", fontsize=9, label=<<b>Modo demo</b><br/>INVENTARIO_REPO=memoria<br/>ejecuta la app sin SQL Server<br/>(repositorios en memoria)>];
+  demo -> app [style=dotted, arrowhead=none, constraint=false];
+}

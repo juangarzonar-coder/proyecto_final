@@ -1,0 +1,31 @@
+// C4 · Nivel 1 · Diagrama de contexto — Sistema EmpresaLimpieza (estado objetivo)
+// Editable. Para exportar (requiere Graphviz):  dot -Tpng c4-1-contexto.dot -o ../exportados/c4-1-contexto.png   (o -Tsvg)
+digraph C4_Contexto {
+  graph [rankdir=TB, fontname="Helvetica", fontsize=11, bgcolor="white", pad=0.4, nodesep=0.9, ranksep=0.9,
+         label=<<b>[Contexto] Sistema de Gestión EmpresaLimpieza</b><br/><font point-size="10">C4 nivel 1 · Quién usa el sistema y con qué sistemas externos se comunica</font>>,
+         labelloc=t, fontsize=16];
+  node  [fontname="Helvetica", fontsize=11, shape=box, style="rounded,filled", margin="0.25,0.15", penwidth=0];
+  edge  [fontname="Helvetica", fontsize=9, color="#707070", fontcolor="#505050", arrowsize=0.8];
+
+  admin [fillcolor="#08427B", fontcolor="white", label=<<b>Administrador / Empleado</b><br/><font point-size="9">[Persona]</font><br/><br/>Registra productos, clientes, pedidos,<br/>materias primas y consulta el<br/>análisis financiero.>];
+
+  sistema [fillcolor="#1168BD", fontcolor="white", width=3.6, label=<<b>Sistema de Gestión EmpresaLimpieza</b><br/><font point-size="9">[Sistema de software · aplicación de escritorio]</font><br/><br/>Controla inventario de productos de limpieza<br/>para hogar y vehículos, materias primas,<br/>proveedores, clientes, pedidos y finanzas.<br/><br/><font point-size="9"><i>MVP de la re-arquitectura: módulo Productos</i></font>>];
+
+  bd [fillcolor="#999999", fontcolor="white", label=<<b>SQL Server</b><br/><font point-size="9">[Sistema externo · motor de base de datos]</font><br/><br/>Base de datos EmpresaLimpiezaDB.<br/>Almacena de forma permanente<br/>toda la información del negocio.>];
+
+  logs [fillcolor="#999999", fontcolor="white", label=<<b>Registro de eventos</b><br/><font point-size="9">[Archivo local · logs/app.log]</font><br/><br/>Detalle técnico de los fallos<br/>para soporte (nuevo, ADR-003).>];
+
+  admin -> sistema [label="  Usa la interfaz gráfica\n  (formularios y tablas)"];
+  sistema -> bd [label="  Lee y escribe datos\n  [ODBC / pyodbc]"];
+  sistema -> logs [label="  Registra errores\n  [logging]", style=dashed];
+
+  { rank=same; bd; logs; }
+
+  leyenda [shape=plaintext, style="", fontsize=9, label=<<table border="0" cellborder="0" cellspacing="6" cellpadding="5">
+    <tr><td colspan="3" align="left"><b>Leyenda</b></td></tr>
+    <tr><td bgcolor="#08427B" style="rounded"><font color="white">Persona</font></td>
+        <td bgcolor="#1168BD" style="rounded"><font color="white">Sistema en alcance</font></td>
+        <td bgcolor="#999999" style="rounded"><font color="white">Sistema / recurso externo</font></td></tr>
+    <tr><td colspan="3" align="left"><font color="#505050">─── dependencia   - - - registro / opcional</font></td></tr></table>>];
+  bd -> leyenda [style=invis];
+}
